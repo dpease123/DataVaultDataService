@@ -18,55 +18,64 @@ namespace DataVaultService
       
         public async Task Work()
         {
-            MakeTodaysFolder();
+            var todaysFolderPath = Path.Combine(ConfigurationManager.AppSettings["DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
+            MakeTodaysFolder(todaysFolderPath);
+            var fusionFileNameList = ConfigurationManager.AppSettings["FusionCSVFileNames"].Split(',').ToList();
             //var x = string.Format(ConfigurationManager.AppSettings["DVLoadsDailyFolder"], DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
             // OracleUCMHelper t = new OracleUCM.OracleUCMHelper(Settings.Default.UCMEndpoint, Settings.Default.Username, Settings.Default.Password);
             OracleUCMHelper t = new OracleUCM.OracleUCMHelper(ConfigurationManager.AppSettings["UCMEndpoint"],
                                                               ConfigurationManager.AppSettings["Username"],
                                                               ConfigurationManager.AppSettings["Password"]);
-            List <OracleUCMFile> files = t.ListFiles("Shaded_Plan*");
-
-            Console.WriteLine($"All files:");
-            if (!files.Any())
+            foreach (var fusionFile in fusionFileNameList)
             {
-                Console.WriteLine("No fusion files found");
-                Console.ReadLine();
-                return;
-            }
+                //List<OracleUCMFile> files = t.ListFiles(fusionFile.Replace(".csv","*"));
+                var files = t.ListFiles(fusionFile.Replace(".csv", "*"));
+
+
+
+                Console.WriteLine($"All files:");
+                if (!files.Any())
+                {
+                    Console.WriteLine($"No fusion files found for {fusionFile}");
+                    continue;
+                }
 
            
-            foreach (var f in files.OrderBy(x => x.dCreateDate))
-            {
-                DateTime dt = f.dCreateDate.Value;
-                DateTime dtLocal = dt.ToLocalTime();
-                Console.WriteLine($"\t{f.dOriginalName} - {f.dCreateDate} - {dtLocal.ToString()} - {f.VaultFileSize}");
-            }
+                //foreach (var f in files.OrderBy(x => x.dCreateDate))
+                //{
+                //    DateTime dt = f.dCreateDate.Value;
+                //    DateTime dtLocal = dt.ToLocalTime();
+                //    Console.WriteLine($"\t{f.dOriginalName} - {f.dCreateDate} - {dtLocal.ToString()} - {f.VaultFileSize}");
+                //}
 
-            var latestFile = files.OrderByDescending(x => x.dCreateDate).First();
-            Console.WriteLine(String.Format("{0}: {1}, {2}", latestFile.dOriginalName, latestFile.dCreateDate, latestFile.dID));
+                var latestFile = files.OrderByDescending(x => x.dCreateDate).First();
+                Console.WriteLine(String.Format("{0}: {1}, {2}", latestFile.dOriginalName, latestFile.dCreateDate, latestFile.dID));
 
-            t.GetFile("dID", latestFile.dID.ToString(), @"c:\temp\testUCMfile_Shaded_Plan.csv");
-            Console.WriteLine(files.Count);
+                t.GetFile("dID", latestFile.dID.ToString(), Path.Combine(todaysFolderPath,fusionFile));
+                Console.WriteLine(files.Count);
+                }
 
             Console.ReadLine();
 
+
         }
 
-        public void MakeTodaysFolder()
+        public void MakeTodaysFolder(string path)
         {
-            var todaysFolderPath = Path.Combine(ConfigurationManager.AppSettings["DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
+          
             try
             {
                 // Determine whether the directory exists.
-                if (Directory.Exists(todaysFolderPath))
+                if (Directory.Exists(path))
                 {
                     Console.WriteLine("That path exists already.");
-                    return;
+                    Directory.Delete(path);
+                    
                 }
 
                 // Try to create the directory.
-                DirectoryInfo di = Directory.CreateDirectory(todaysFolderPath);
-                Console.WriteLine("The directory was created successfully at {0}.", Directory.GetCreationTime(todaysFolderPath));
+                DirectoryInfo di = Directory.CreateDirectory(path);
+                Console.WriteLine("The directory was created successfully at {0}.", Directory.GetCreationTime(path));
 
             }
             catch (Exception e)
