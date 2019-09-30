@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{3667AB8C-B5D8-4DE8-A594-262BD4F04E96}") = "DataVaultService", "DataVaultService\DataVaultService.csproj", "{992734BD-4D64-460E-9CE9-25285EE5B1F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{992734BD-4D64-460E-9CE9-25285EE5B1F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{992734BD-4D64-460E-9CE9-25285EE5B1F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{992734BD-4D64-460E-9CE9-25285EE5B1F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{992734BD-4D64-460E-9CE9-25285EE5B1F6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4BCD53B1-2B3D-491B-A33F-2B5F8A6F9929}
+	EndGlobalSection
+EndGlobal
