@@ -18,6 +18,8 @@ namespace DataVaultService
       
         public async Task Work()
         {
+            MakeTodaysFolder();
+            //var x = string.Format(ConfigurationManager.AppSettings["DVLoadsDailyFolder"], DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
             // OracleUCMHelper t = new OracleUCM.OracleUCMHelper(Settings.Default.UCMEndpoint, Settings.Default.Username, Settings.Default.Password);
             OracleUCMHelper t = new OracleUCM.OracleUCMHelper(ConfigurationManager.AppSettings["UCMEndpoint"],
                                                               ConfigurationManager.AppSettings["Username"],
@@ -25,6 +27,14 @@ namespace DataVaultService
             List <OracleUCMFile> files = t.ListFiles("Shaded_Plan*");
 
             Console.WriteLine($"All files:");
+            if (!files.Any())
+            {
+                Console.WriteLine("No fusion files found");
+                Console.ReadLine();
+                return;
+            }
+
+           
             foreach (var f in files.OrderBy(x => x.dCreateDate))
             {
                 DateTime dt = f.dCreateDate.Value;
@@ -40,6 +50,29 @@ namespace DataVaultService
 
             Console.ReadLine();
 
+        }
+
+        public void MakeTodaysFolder()
+        {
+            var todaysFolderPath = Path.Combine(ConfigurationManager.AppSettings["DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
+            try
+            {
+                // Determine whether the directory exists.
+                if (Directory.Exists(todaysFolderPath))
+                {
+                    Console.WriteLine("That path exists already.");
+                    return;
+                }
+
+                // Try to create the directory.
+                DirectoryInfo di = Directory.CreateDirectory(todaysFolderPath);
+                Console.WriteLine("The directory was created successfully at {0}.", Directory.GetCreationTime(todaysFolderPath));
+
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("The process failed: {0}", e.ToString());
+            }
         }
 
     }
