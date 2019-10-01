@@ -29,13 +29,21 @@ namespace DataVaultService
             foreach (var fusionFile in fusionFileNameList)
             {
                 //List<OracleUCMFile> files = t.ListFiles(fusionFile.Replace(".csv","*"));
-                var files = t.ListFiles(fusionFile.Replace(".csv", "*"));
+                //var files = t.ListFiles(fusionFile.Replace(".csv", "*"));
+                var files = t.ListFiles("*");
+                var thefile = files.Where(x => x.dDocTitle.Contains("Buildings_c")).FirstOrDefault();
+
+
 
 
 
                 Console.WriteLine($"All files:");
-                if (!files.Any())
+                if (files.Any())
                 {
+                    foreach (var f in files)
+                    {
+                        Console.WriteLine(f.dDocTitle);
+                    }
                     Console.WriteLine($"No fusion files found for {fusionFile}");
                     continue;
                 }
@@ -69,6 +77,7 @@ namespace DataVaultService
                 if (Directory.Exists(path))
                 {
                     Console.WriteLine("That path exists already.");
+                    Array.ForEach(Directory.GetFiles(path), File.Delete);
                     Directory.Delete(path);
                     
                 }
