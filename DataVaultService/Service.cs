@@ -14,7 +14,6 @@ namespace DataVaultService
     public class Service
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
         public void Start()
         {
             // write code here that runs when the Windows Service starts up. 
@@ -40,32 +39,28 @@ namespace DataVaultService
 
                 StdSchedulerFactory factory = new StdSchedulerFactory(props);
                 IScheduler scheduler = await factory.GetScheduler();
-
-                // and start it off
-                await scheduler.Start();
-
                 // define the job and tie it to our HelloJob class
-                IJobDetail job = JobBuilder.Create<LoadFusionDataJob>()
-                    .WithIdentity("FusuionJob", "group1")
+                IJobDetail jobDetail = JobBuilder.Create<LoadFusionDataJob>()
+                    .WithIdentity("FusionJob")
                     .Build();
 
                 // Trigger the job to run now, and then repeat every 10 seconds
                 ITrigger trigger = TriggerBuilder.Create()
-                    .WithIdentity("trigger1", "group1")
+                    .ForJob(jobDetail)
+                    .WithCronSchedule(ConfigurationManager.AppSettings["CRONTriggerInterval"])  //0 0 7 ? * MON-SUN * -- every day at 7:00AM
+                    .WithIdentity("FusionTrigger")
                     .StartNow()
-                    .WithSimpleSchedule(x => x
-                        .WithIntervalInHours(int.Parse(ConfigurationManager.AppSettings["JobnIntervalHours"]))
-                        .RepeatForever())
                     .Build();
 
                 // Tell quartz to schedule the job using our trigger
-                await scheduler.ScheduleJob(job, trigger);
+                await scheduler.ScheduleJob(jobDetail, trigger);
+                await scheduler.Start();
 
-                // some sleep to show what's happening
-                await Task.Delay(TimeSpan.FromSeconds(1));
+                //// some sleep to show what's happening
+                //await Task.Delay(TimeSpan.FromSeconds(1));
 
                 // and last shut down the scheduler when you are ready to close your program
-                await scheduler.Shutdown();
+                //await scheduler.Shutdown();
             }
             catch (SchedulerException se)
             {

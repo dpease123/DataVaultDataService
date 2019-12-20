@@ -13,59 +13,47 @@ namespace DataVaultService
 {
     public class FusionDataWorker
     {
-        //private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        //private readonly LDBRepository _repo = new LDBRepository();
-      
+        private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public async Task Work()
         {
+            _logger.Info("Started Fusion file processing");
             var todaysFolderPath = Path.Combine(ConfigurationManager.AppSettings["DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
             MakeTodaysFolder(todaysFolderPath);
             var fusionFileNameList = ConfigurationManager.AppSettings["FusionCSVFileNames"].Split(',').ToList();
-            //var x = string.Format(ConfigurationManager.AppSettings["DVLoadsDailyFolder"], DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-            // OracleUCMHelper t = new OracleUCM.OracleUCMHelper(Settings.Default.UCMEndpoint, Settings.Default.Username, Settings.Default.Password);
             OracleUCMHelper t = new OracleUCM.OracleUCMHelper(ConfigurationManager.AppSettings["UCMEndpoint"],
                                                               ConfigurationManager.AppSettings["Username"],
                                                               ConfigurationManager.AppSettings["Password"]);
+            DateTime now = DateTime.Now;
             foreach (var fusionFile in fusionFileNameList)
             {
-                //List<OracleUCMFile> files = t.ListFiles(fusionFile.Replace(".csv","*"));
-                //var files = t.ListFiles(fusionFile.Replace(".csv", "*"));
-                var files = t.ListFiles("*");
-                var thefile = files.Where(x => x.dDocTitle.Contains("Buildings_c")).FirstOrDefault();
-
-
-
-
-
-                Console.WriteLine($"All files:");
-                if (files.Any())
+               
+                try 
                 {
-                    foreach (var f in files)
+                    List<OracleUCMFile> files = t.ListFiles(fusionFile.Trim());
+                    if (files.Any())
                     {
-                        Console.WriteLine(f.dDocTitle);
+                        var latestFile = files.OrderByDescending(x => x.dCreateDate).First();
+                        bool bDate = DateTime.TryParse(latestFile.dCreateDate.ToString(), out DateTime fDate);
+                        if (!bDate)
+                        {
+                            _logger.Error($"{fusionFile} created at date is invalid - not processed.");
+                        }
+                       
+                        if (fDate.Day == now.Day && fDate.Month == now.Month && fDate.Year == now.Year)
+                            t.GetFile("dID", latestFile.dID.ToString(), Path.Combine(todaysFolderPath, fusionFile));
+                        else
+                            _logger.Error($"File is not for today - {fusionFile}");
                     }
-                    Console.WriteLine($"No fusion files found for {fusionFile}");
-                    continue;
+                    else
+                        _logger.Info($"No file for {fusionFile}");
                 }
-
-           
-                //foreach (var f in files.OrderBy(x => x.dCreateDate))
-                //{
-                //    DateTime dt = f.dCreateDate.Value;
-                //    DateTime dtLocal = dt.ToLocalTime();
-                //    Console.WriteLine($"\t{f.dOriginalName} - {f.dCreateDate} - {dtLocal.ToString()} - {f.VaultFileSize}");
-                //}
-
-                var latestFile = files.OrderByDescending(x => x.dCreateDate).First();
-                Console.WriteLine(String.Format("{0}: {1}, {2}", latestFile.dOriginalName, latestFile.dCreateDate, latestFile.dID));
-
-                t.GetFile("dID", latestFile.dID.ToString(), Path.Combine(todaysFolderPath,fusionFile));
-                Console.WriteLine(files.Count);
+                catch (Exception ex)
+                {
+                    _logger.Error($"Error with {fusionFile}. Message: {ex.ToString()}");
                 }
+            }
 
-            Console.ReadLine();
-
-
+            _logger.Info("Completed Fusion file processing");
         }
 
         public void MakeTodaysFolder(string path)

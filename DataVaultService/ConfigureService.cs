@@ -20,10 +20,10 @@ namespace DataVaultService
                     service.WhenStopped(s => s.Stop());
                 });
                 //Setup Account that window service use to run.  
-                configure.RunAsLocalSystem();
+                configure.RunAsLocalSystem();  //Network local system account
                 configure.SetServiceName("DataVaultDataService");
                 configure.SetDisplayName("DataVaultDataService");
-                configure.SetDescription("Loads Data into the Data Vault");
+                configure.SetDescription("Gets files from fusion to be loaded into the Data Vault.");
             });
         }
     }
