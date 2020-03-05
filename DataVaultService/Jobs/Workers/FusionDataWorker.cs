@@ -16,14 +16,22 @@ namespace DataVaultService
         private static readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         public async Task Work()
         {
+
+
             _logger.Info("Started Fusion file processing");
+            var extractFolder = ConfigurationManager.AppSettings["DVLoadsRootFolderName"];
             var todaysFolderPath = Path.Combine(ConfigurationManager.AppSettings["DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
+            var todaysFolderPath_Dev = Path.Combine(ConfigurationManager.AppSettings["Dev_DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
             MakeTodaysFolder(todaysFolderPath);
+            MakeTodaysFolder(todaysFolderPath_Dev);
             var fusionFileNameList = ConfigurationManager.AppSettings["FusionCSVFileNames"].Split(',').ToList();
             OracleUCMHelper t = new OracleUCM.OracleUCMHelper(ConfigurationManager.AppSettings["UCMEndpoint"],
                                                               ConfigurationManager.AppSettings["Username"],
                                                               ConfigurationManager.AppSettings["Password"]);
             DateTime now = DateTime.Now;
+
+         
+
             foreach (var fusionFile in fusionFileNameList)
             {
                
@@ -38,9 +46,11 @@ namespace DataVaultService
                         {
                             _logger.Error($"{fusionFile} created at date is invalid - not processed.");
                         }
-                       
+
                         if (fDate.Day == now.Day && fDate.Month == now.Month && fDate.Year == now.Year)
-                            t.GetFile("dID", latestFile.dID.ToString(), Path.Combine(todaysFolderPath, fusionFile));
+                        {
+                            t.GetFile("dID", latestFile.dID.ToString(), Path.Combine(extractFolder, fusionFile));
+                        }
                         else
                             _logger.Error($"File is not for today - {fusionFile}");
                     }
@@ -53,6 +63,15 @@ namespace DataVaultService
                 }
             }
 
+
+
+            //Copy all the files & Replaces any files with the same name
+            foreach (string fusionFile in Directory.GetFiles(extractFolder, "*.csv", SearchOption.TopDirectoryOnly))
+            {
+                var f = Path.GetFileName(fusionFile);
+                File.Copy(fusionFile, Path.Combine(todaysFolderPath, f), true);
+                File.Copy(fusionFile, Path.Combine(todaysFolderPath_Dev, f), true);
+            }
             _logger.Info("Completed Fusion file processing");
         }
 

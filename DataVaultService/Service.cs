@@ -44,10 +44,10 @@ namespace DataVaultService
                     .WithIdentity("FusionJob")
                     .Build();
 
-                // Trigger the job to run now, and then repeat every 10 seconds
+                // Trigger the job to run now, and then repeat
                 ITrigger trigger = TriggerBuilder.Create()
                     .ForJob(jobDetail)
-                    .WithCronSchedule(ConfigurationManager.AppSettings["CRONTriggerInterval"])  //0 0 7 ? * MON-SUN * -- every day at 7:00AM
+                    //.WithCronSchedule(ConfigurationManager.AppSettings["CRONTriggerInterval"])  
                     .WithIdentity("FusionTrigger")
                     .StartNow()
                     .Build();
@@ -55,9 +55,6 @@ namespace DataVaultService
                 // Tell quartz to schedule the job using our trigger
                 await scheduler.ScheduleJob(jobDetail, trigger);
                 await scheduler.Start();
-
-                //// some sleep to show what's happening
-                //await Task.Delay(TimeSpan.FromSeconds(1));
 
                 // and last shut down the scheduler when you are ready to close your program
                 //await scheduler.Shutdown();
