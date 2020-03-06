@@ -20,18 +20,19 @@ namespace DataVaultService
 
             _logger.Info("Started Fusion file processing");
             var extractFolder = ConfigurationManager.AppSettings["DVLoadsRootFolderName"];
+            var extractFolder_DEV = ConfigurationManager.AppSettings["DEV_DVLoadsRootFolderName"];
+
+            
             var todaysFolderPath = Path.Combine(ConfigurationManager.AppSettings["DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
-            var todaysFolderPath_Dev = Path.Combine(ConfigurationManager.AppSettings["Dev_DVLoadsRootFolderName"], DateTime.Now.ToString(ConfigurationManager.AppSettings["DVLoadsDailyFolderName"]));
             MakeTodaysFolder(todaysFolderPath);
-            MakeTodaysFolder(todaysFolderPath_Dev);
             var fusionFileNameList = ConfigurationManager.AppSettings["FusionCSVFileNames"].Split(',').ToList();
             OracleUCMHelper t = new OracleUCM.OracleUCMHelper(ConfigurationManager.AppSettings["UCMEndpoint"],
                                                               ConfigurationManager.AppSettings["Username"],
                                                               ConfigurationManager.AppSettings["Password"]);
             DateTime now = DateTime.Now;
 
-         
 
+           
             foreach (var fusionFile in fusionFileNameList)
             {
                
@@ -69,8 +70,10 @@ namespace DataVaultService
             foreach (string fusionFile in Directory.GetFiles(extractFolder, "*.csv", SearchOption.TopDirectoryOnly))
             {
                 var f = Path.GetFileName(fusionFile);
+                //copy to dev fusion extract folder
+                File.Copy(fusionFile, Path.Combine(extractFolder_DEV, f), true);
+                //copy to dated folder on prod box
                 File.Copy(fusionFile, Path.Combine(todaysFolderPath, f), true);
-                File.Copy(fusionFile, Path.Combine(todaysFolderPath_Dev, f), true);
             }
             _logger.Info("Completed Fusion file processing");
         }
