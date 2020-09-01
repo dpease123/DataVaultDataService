@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Configuration;
 using DataVaultService.OracleUCM;
 using SVGLeasePlanService.Data.DTO;
+using System.IO.Compression;
 
 namespace DataVaultService
 {
@@ -36,21 +37,31 @@ namespace DataVaultService
             foreach (var fusionFile in fusionFileNameList)
             {
                
+             
                 try 
                 {
                     List<OracleUCMFile> files = t.ListFiles(fusionFile.Trim());
                     if (files.Any())
                     {
+
                         var latestFile = files.OrderByDescending(x => x.dCreateDate).First();
                         bool bDate = DateTime.TryParse(latestFile.dCreateDate.ToString(), out DateTime fDate);
                         if (!bDate)
                         {
                             _logger.Error($"{fusionFile} created at date is invalid - not processed.");
+                            continue;
                         }
-
-                        if (fDate.Day == now.Day && fDate.Month == now.Month && fDate.Year == now.Year)
+                     
+                        if (fDate.ToLocalTime().Day == now.Day && fDate.ToLocalTime().Month == now.Month && fDate.ToLocalTime().Year == now.Year)
                         {
                             t.GetFile("dID", latestFile.dID.ToString(), Path.Combine(extractFolder, fusionFile));
+                          
+                            //if (fusionFile.EndsWith(".zip")) ;
+                            //{
+                            //    var zipPath = Path.Combine(extractFolder, fusionFile);
+                            //    System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, Path.Combine(extractFolder,"RFI_c.csv"));
+                            //}
+
                         }
                         else
                             _logger.Error($"File is not for today - {fusionFile}");

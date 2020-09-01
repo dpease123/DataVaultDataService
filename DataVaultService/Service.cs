@@ -47,7 +47,7 @@ namespace DataVaultService
                 // Trigger the job to run now, and then repeat
                 ITrigger trigger = TriggerBuilder.Create()
                     .ForJob(jobDetail)
-                    .WithCronSchedule(ConfigurationManager.AppSettings["CRONTriggerInterval"])  
+                    //.WithCronSchedule(ConfigurationManager.AppSettings["CRONTriggerInterval"])  
                     .WithIdentity("FusionTrigger")
                     .StartNow()
                     .Build();
